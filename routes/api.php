@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\WeddingSettingsController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\WeddingController;
 use Illuminate\Support\Facades\Route;
@@ -21,4 +22,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthenticationController::class, 'me']);
 
     Route::get('/admin/ping', fn () => response()->json(['status' => 'ok']));
+    Route::get('/admin/wedding', [WeddingSettingsController::class, 'show']);
+    Route::put('/admin/wedding', [WeddingSettingsController::class, 'update']);
 });

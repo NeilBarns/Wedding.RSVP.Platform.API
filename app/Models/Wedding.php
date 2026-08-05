@@ -52,4 +52,9 @@ class Wedding extends Model
     {
         return $this->hasMany(Invitation::class);
     }
+
+    public static function currentSingleWedding(): ?self
+    {
+        return self::query()->oldest('id')->first();
+    }
 }

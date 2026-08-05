@@ -10,7 +10,7 @@ class WeddingController extends Controller
 {
     public function show(): WeddingResource|JsonResponse
     {
-        $wedding = Wedding::query()->orderBy('id')->first();
+        $wedding = Wedding::currentSingleWedding();
 
         if ($wedding === null) {
             return response()->json([
