@@ -11,6 +11,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(InitialWeddingSeeder::class);
+        $this->call([
+            InitialWeddingSeeder::class,
+            InitialOwnerSeeder::class,
+        ]);
     }
 }
