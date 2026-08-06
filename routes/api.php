@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\GuestController;
 use App\Http\Controllers\Admin\InvitationController;
 use App\Http\Controllers\Admin\WeddingSettingsController;
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\PublicInvitationController;
 use App\Http\Controllers\WeddingController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,8 @@ Route::get('/health', function () {
 });
 
 Route::get('/wedding', [WeddingController::class, 'show']);
+Route::get('/invitations/{token}', [PublicInvitationController::class, 'show'])
+    ->middleware('throttle:public-invitation');
 
 Route::post('/auth/login', [AuthenticationController::class, 'login'])
     ->middleware('throttle:login');

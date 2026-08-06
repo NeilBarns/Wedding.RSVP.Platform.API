@@ -28,5 +28,9 @@ class AppServiceProvider extends ServiceProvider
                 Str::lower((string) $request->input('email')).'|'.$request->ip()
             );
         });
+
+        RateLimiter::for('public-invitation', function (Request $request) {
+            return Limit::perMinute(60)->by($request->ip());
+        });
     }
 }
