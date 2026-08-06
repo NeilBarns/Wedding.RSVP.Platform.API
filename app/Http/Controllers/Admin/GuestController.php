@@ -10,6 +10,7 @@ use App\Models\Guest;
 use App\Models\Invitation;
 use App\Models\Wedding;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class GuestController extends Controller
 {
@@ -18,22 +19,24 @@ class GuestController extends Controller
         CreateInvitation $mapper,
         int $invitation,
     ): GuestResource|JsonResponse {
-        $record = $this->findInvitation($invitation);
+        return DB::transaction(function () use ($request, $mapper, $invitation) {
+            $record = $this->findInvitation($invitation, true);
 
-        if ($record === null) {
-            return $this->notFound();
-        }
+            if ($record === null) {
+                return $this->notFound();
+            }
 
-        if ($record->status === Invitation::STATUS_ARCHIVED) {
-            return $this->conflict('Archived invitations cannot be modified.');
-        }
+            if ($record->status === Invitation::STATUS_ARCHIVED) {
+                return $this->conflict('Archived invitations cannot be modified.');
+            }
 
-        $guest = $record->guests()->create([
-            ...$mapper->guest($request->validated()),
-            'attendance_status' => Guest::ATTENDANCE_PENDING,
-        ]);
+            $guest = $record->guests()->create([
+                ...$mapper->guest($request->validated()),
+                'attendance_status' => Guest::ATTENDANCE_PENDING,
+            ]);
 
-        return (new GuestResource($guest))->response()->setStatusCode(201);
+            return (new GuestResource($guest))->response()->setStatusCode(201);
+        });
     }
 
     public function update(
@@ -42,56 +45,69 @@ class GuestController extends Controller
         int $invitation,
         int $guest,
     ): GuestResource|JsonResponse {
-        [$record, $guestRecord] = $this->findNested($invitation, $guest);
+        return DB::transaction(function () use ($request, $mapper, $invitation, $guest) {
+            [$record, $guestRecord] = $this->findNested($invitation, $guest, true);
 
-        if ($record === null || $guestRecord === null) {
-            return $this->notFound();
-        }
+            if ($record === null || $guestRecord === null) {
+                return $this->notFound();
+            }
 
-        if ($record->status === Invitation::STATUS_ARCHIVED) {
-            return $this->conflict('Archived invitations cannot be modified.');
-        }
+            if ($record->status === Invitation::STATUS_ARCHIVED) {
+                return $this->conflict('Archived invitations cannot be modified.');
+            }
 
-        $guestRecord->update($mapper->guest($request->validated()));
+            $guestRecord->update($mapper->guest($request->validated()));
 
-        return new GuestResource($guestRecord->refresh());
+            return new GuestResource($guestRecord->refresh());
+        });
     }
 
     public function destroy(int $invitation, int $guest): JsonResponse
     {
-        [$record, $guestRecord] = $this->findNested($invitation, $guest);
+        return DB::transaction(function () use ($invitation, $guest) {
+            [$record, $guestRecord] = $this->findNested($invitation, $guest, true);
 
-        if ($record === null || $guestRecord === null) {
-            return $this->notFound();
-        }
+            if ($record === null || $guestRecord === null) {
+                return $this->notFound();
+            }
 
-        if ($record->status === Invitation::STATUS_ARCHIVED) {
-            return $this->conflict('Archived invitations cannot be modified.');
-        }
+            if ($record->status === Invitation::STATUS_ARCHIVED) {
+                return $this->conflict('Archived invitations cannot be modified.');
+            }
 
-        if ($guestRecord->attendance_status !== Guest::ATTENDANCE_PENDING) {
-            return $this->conflict('Only guests with pending attendance can be deleted.');
-        }
+            if ($guestRecord->attendance_status !== Guest::ATTENDANCE_PENDING) {
+                return $this->conflict('Only guests with pending attendance can be deleted.');
+            }
 
-        if ($record->guests()->count() <= 1) {
-            return $this->conflict('An invitation must retain at least one guest.');
-        }
+            if ($record->guests()->count() <= 1) {
+                return $this->conflict('An invitation must retain at least one guest.');
+            }
 
-        $guestRecord->delete();
+            $guestRecord->delete();
 
-        return response()->json(status: 204);
+            return response()->json(status: 204);
+        });
     }
 
-    private function findInvitation(int $id): ?Invitation
+    private function findInvitation(int $id, bool $lockForUpdate = false): ?Invitation
     {
-        return Wedding::currentSingleWedding()?->invitations()->whereKey($id)->first();
+        return Wedding::currentSingleWedding()?->invitations()
+            ->whereKey($id)
+            ->when($lockForUpdate, fn ($query) => $query->lockForUpdate())
+            ->first();
     }
 
-    private function findNested(int $invitation, int $guest): array
+    private function findNested(int $invitation, int $guest, bool $lockForUpdate = false): array
     {
-        $record = $this->findInvitation($invitation);
+        $record = $this->findInvitation($invitation, $lockForUpdate);
 
-        return [$record, $record?->guests()->whereKey($guest)->first()];
+        return [
+            $record,
+            $record?->guests()
+                ->whereKey($guest)
+                ->when($lockForUpdate, fn ($query) => $query->lockForUpdate())
+                ->first(),
+        ];
     }
 
     private function notFound(): JsonResponse

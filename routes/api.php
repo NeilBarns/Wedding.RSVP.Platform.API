@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\InvitationController;
 use App\Http\Controllers\Admin\WeddingSettingsController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\PublicInvitationController;
+use App\Http\Controllers\PublicRsvpController;
 use App\Http\Controllers\WeddingController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,8 @@ Route::get('/health', function () {
 Route::get('/wedding', [WeddingController::class, 'show']);
 Route::get('/invitations/{token}', [PublicInvitationController::class, 'show'])
     ->middleware('throttle:public-invitation');
+Route::put('/invitations/{token}/rsvp', [PublicRsvpController::class, 'update'])
+    ->middleware('throttle:public-rsvp');
 
 Route::post('/auth/login', [AuthenticationController::class, 'login'])
     ->middleware('throttle:login');

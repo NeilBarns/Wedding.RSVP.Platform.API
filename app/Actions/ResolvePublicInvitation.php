@@ -13,24 +13,13 @@ class ResolvePublicInvitation
 
     public function handle(string $rawToken): ?Invitation
     {
-        if (! preg_match('/\A[A-Za-z0-9_-]{32,128}\z/', $rawToken)) {
-            return null;
-        }
-
         $wedding = Wedding::currentSingleWedding();
 
         if ($wedding === null || $wedding->status !== Wedding::STATUS_PUBLISHED) {
             return null;
         }
 
-        $invitation = $wedding->invitations()
-            ->where('token_hash', $this->tokens->hash($rawToken))
-            ->whereIn('status', [
-                Invitation::STATUS_READY,
-                Invitation::STATUS_SUBMITTED,
-                Invitation::STATUS_LOCKED,
-            ])
-            ->first();
+        $invitation = $this->find($wedding, $rawToken);
 
         if ($invitation === null) {
             return null;
@@ -52,5 +41,36 @@ class ResolvePublicInvitation
         ]);
 
         return $invitation;
+    }
+
+    public function handleForUpdate(string $rawToken): ?Invitation
+    {
+        $wedding = Wedding::query()->oldest('id')->lockForUpdate()->first();
+
+        if ($wedding === null || $wedding->status !== Wedding::STATUS_PUBLISHED) {
+            return null;
+        }
+
+        $invitation = $this->find($wedding, $rawToken, true);
+        $invitation?->setRelation('wedding', $wedding);
+
+        return $invitation;
+    }
+
+    private function find(Wedding $wedding, string $rawToken, bool $lockForUpdate = false): ?Invitation
+    {
+        if (! preg_match('/\A[A-Za-z0-9_-]{32,128}\z/', $rawToken)) {
+            return null;
+        }
+
+        return $wedding->invitations()
+            ->where('token_hash', $this->tokens->hash($rawToken))
+            ->whereIn('status', [
+                Invitation::STATUS_READY,
+                Invitation::STATUS_SUBMITTED,
+                Invitation::STATUS_LOCKED,
+            ])
+            ->when($lockForUpdate, fn ($query) => $query->lockForUpdate())
+            ->first();
     }
 }

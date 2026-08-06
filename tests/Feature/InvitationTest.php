@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Invitation;
+use App\Models\RsvpRevision;
 use App\Models\Wedding;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,6 +28,9 @@ class InvitationTest extends TestCase
         $this->assertNull($invitation->contact_number);
         $this->assertNull($invitation->email);
         $this->assertNull($invitation->internal_notes);
+        $this->assertNull($invitation->response_contact_number);
+        $this->assertNull($invitation->response_email);
+        $this->assertNull($invitation->message_to_couple);
 
         Invitation::factory()->for($wedding)->create();
         $this->assertCount(2, $wedding->invitations);
@@ -63,5 +67,26 @@ class InvitationTest extends TestCase
         $wedding->delete();
 
         $this->assertDatabaseMissing('invitations', ['id' => $invitation->id]);
+    }
+
+    public function test_an_invitation_has_response_fields_and_rsvp_revisions(): void
+    {
+        $invitation = Invitation::factory()->create([
+            'response_contact_number' => '09171234567',
+            'response_email' => 'guest@example.com',
+            'message_to_couple' => 'See you there!',
+        ]);
+        $revision = $invitation->rsvpRevisions()->create([
+            'revision_number' => 1,
+            'response_snapshot' => ['invitation' => ['id' => $invitation->id]],
+            'submitted_at' => '2026-08-06 05:00:00',
+        ]);
+
+        $this->assertSame('09171234567', $invitation->response_contact_number);
+        $this->assertTrue($invitation->rsvpRevisions->contains($revision));
+        $this->assertInstanceOf(RsvpRevision::class, $revision);
+        $this->assertSame($invitation->id, $revision->invitation->id);
+        $this->assertIsArray($revision->response_snapshot);
+        $this->assertInstanceOf(\DateTimeInterface::class, $revision->submitted_at);
     }
 }
