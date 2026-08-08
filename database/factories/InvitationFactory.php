@@ -35,6 +35,9 @@ class InvitationFactory extends Factory
             'last_opened_at' => null,
             'submitted_at' => null,
             'locked_at' => null,
+            'response_contact_number' => null,
+            'response_email' => null,
+            'message_to_couple' => null,
         ];
     }
 

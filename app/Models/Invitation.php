@@ -44,6 +44,9 @@ class Invitation extends Model
         'last_opened_at',
         'submitted_at',
         'locked_at',
+        'response_contact_number',
+        'response_email',
+        'message_to_couple',
     ];
 
     protected function casts(): array
@@ -64,5 +67,29 @@ class Invitation extends Model
     public function guests(): HasMany
     {
         return $this->hasMany(Guest::class);
+    }
+
+    public function rsvpRevisions(): HasMany
+    {
+        return $this->hasMany(RsvpRevision::class);
+    }
+
+    public function isLockedForResponse(): bool
+    {
+        return $this->status === self::STATUS_LOCKED || $this->locked_at !== null;
+    }
+
+    public function deadlineAllowsResponse(): bool
+    {
+        return $this->wedding->rsvp_deadline === null
+            || today(config('app.timezone'))->lte($this->wedding->rsvp_deadline);
+    }
+
+    public function canRespond(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_READY,
+            self::STATUS_SUBMITTED,
+        ], true) && ! $this->isLockedForResponse() && $this->deadlineAllowsResponse();
     }
 }
