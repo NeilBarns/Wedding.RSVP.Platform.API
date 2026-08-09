@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\WeddingTemplateKey;
 use App\Models\User;
 use App\Models\Wedding;
+use App\Models\WeddingHeroContent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -213,11 +214,83 @@ class AdminWeddingSettingsTest extends TestCase
         ]))->assertOk()
             ->assertJsonPath('data.templateKey', WeddingTemplateKey::EditorialLinenV1->value);
 
+        $this->putJson('/api/admin/wedding', $this->validPayload([
+            'templateKey' => WeddingTemplateKey::ModernMinimalV1->value,
+        ]))->assertOk()
+            ->assertJsonPath('data.templateKey', WeddingTemplateKey::ModernMinimalV1->value);
+
         foreach (['unknown', 'classic', '<script>'] as $templateKey) {
             $this->putJson('/api/admin/wedding', $this->validPayload([
                 'templateKey' => $templateKey,
             ]))->assertUnprocessable()->assertJsonValidationErrors('templateKey');
         }
+    }
+
+    public function test_template_enum_contains_both_built_in_template_keys(): void
+    {
+        $this->assertSame([
+            'editorial-linen-v1',
+            'modern-minimal-v1',
+        ], array_column(WeddingTemplateKey::cases(), 'value'));
+    }
+
+    public function test_modern_minimal_persists_publicly_and_can_switch_back_without_changing_theme_or_content(): void
+    {
+        $wedding = Wedding::factory()->create([
+            'status' => Wedding::STATUS_PUBLISHED,
+            'template_key' => WeddingTemplateKey::EditorialLinenV1->value,
+            'theme_key' => 'custom-theme',
+            'primary_color' => '#112233',
+            'secondary_color' => '#445566',
+            'accent_color' => '#778899',
+            'background_color' => '#AABBCC',
+            'heading_font' => 'Georgia',
+            'body_font' => 'Inter',
+        ]);
+        WeddingHeroContent::factory()->for($wedding)->published()->create([
+            'headline' => 'Persisted hero',
+        ]);
+        $this->actingAs(User::factory()->create());
+
+        $theme = [
+            'key' => 'custom-theme',
+            'primaryColor' => '#112233',
+            'secondaryColor' => '#445566',
+            'accentColor' => '#778899',
+            'backgroundColor' => '#AABBCC',
+            'headingFont' => 'Georgia',
+            'bodyFont' => 'Inter',
+        ];
+
+        $this->putJson('/api/admin/wedding', $this->validPayload([
+            'status' => Wedding::STATUS_PUBLISHED,
+            'templateKey' => WeddingTemplateKey::ModernMinimalV1->value,
+            'theme' => $theme,
+        ]))->assertOk()
+            ->assertJsonPath('data.templateKey', WeddingTemplateKey::ModernMinimalV1->value)
+            ->assertJsonPath('data.theme', $theme);
+
+        $this->getJson('/api/admin/wedding')->assertOk()
+            ->assertJsonPath('data.templateKey', WeddingTemplateKey::ModernMinimalV1->value);
+        $this->getJson('/api/wedding')->assertOk()
+            ->assertJsonPath('data.templateKey', WeddingTemplateKey::ModernMinimalV1->value)
+            ->assertJsonPath('data.theme', $theme)
+            ->assertJsonPath('data.content.hero.headline', 'Persisted hero');
+
+        $this->putJson('/api/admin/wedding', $this->validPayload([
+            'status' => Wedding::STATUS_PUBLISHED,
+            'templateKey' => WeddingTemplateKey::EditorialLinenV1->value,
+            'theme' => $theme,
+        ]))->assertOk()
+            ->assertJsonPath('data.templateKey', WeddingTemplateKey::EditorialLinenV1->value)
+            ->assertJsonPath('data.theme', $theme);
+
+        $wedding->refresh();
+        $this->assertSame(WeddingTemplateKey::EditorialLinenV1->value, $wedding->template_key);
+        $this->assertSame('custom-theme', $wedding->theme_key);
+        $this->assertSame('#112233', $wedding->primary_color);
+        $this->assertSame(1, $wedding->heroContent()->count());
+        $this->assertSame('Persisted hero', $wedding->heroContent()->value('headline'));
     }
 
     public function test_older_put_payload_and_theme_changes_preserve_template_identity(): void

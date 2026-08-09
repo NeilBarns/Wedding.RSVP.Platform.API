@@ -9,4 +9,5 @@ namespace App\Enums;
 enum WeddingTemplateKey: string
 {
     case EditorialLinenV1 = 'editorial-linen-v1';
+    case ModernMinimalV1 = 'modern-minimal-v1';
 }
