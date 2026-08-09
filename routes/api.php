@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardSummaryController;
 use App\Http\Controllers\Admin\GuestController;
 use App\Http\Controllers\Admin\InvitationController;
+use App\Http\Controllers\Admin\RsvpConfigurationController;
 use App\Http\Controllers\Admin\WeddingEventContentController;
 use App\Http\Controllers\Admin\WeddingFaqContentController;
 use App\Http\Controllers\Admin\WeddingGalleryContentController;
@@ -40,6 +41,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/dashboard/summary', DashboardSummaryController::class);
     Route::get('/admin/wedding', [WeddingSettingsController::class, 'show']);
     Route::put('/admin/wedding', [WeddingSettingsController::class, 'update']);
+    Route::get('/admin/rsvp-configuration', [RsvpConfigurationController::class, 'show']);
+    Route::put('/admin/rsvp-configuration', [RsvpConfigurationController::class, 'update']);
 
     Route::get('/admin/wedding-media', [WeddingMediaController::class, 'index']);
     Route::post('/admin/wedding-media', [WeddingMediaController::class, 'store']);
