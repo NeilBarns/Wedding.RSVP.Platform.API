@@ -36,6 +36,13 @@ class WeddingApiTest extends TestCase
                         'headingFont' => null,
                         'bodyFont' => null,
                     ],
+                    'content' => [
+                        'hero' => null,
+                        'story' => [],
+                        'events' => [],
+                        'faq' => [],
+                        'gallery' => [],
+                    ],
                 ],
             ])
             ->assertJsonMissingPath('data.partner_one_name')

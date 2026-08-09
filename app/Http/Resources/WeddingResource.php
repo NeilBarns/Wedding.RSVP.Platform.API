@@ -11,6 +11,10 @@ class WeddingResource extends WeddingSummaryResource
         return [
             'id' => $this->id,
             ...parent::toArray($request),
+            'content' => $this->when(
+                $this->relationLoaded('storyEntries'),
+                fn () => (new WeddingContentResource($this->resource))->resolve($request),
+            ),
         ];
     }
 }
