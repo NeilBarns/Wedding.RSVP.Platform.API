@@ -10,7 +10,7 @@ class UpdateWeddingSettings
     {
         $theme = $settings['theme'] ?? [];
 
-        $wedding->update([
+        $attributes = [
             'partner_one_name' => $settings['partnerOneName'],
             'partner_two_name' => $settings['partnerTwoName'],
             'wedding_date' => $settings['weddingDate'],
@@ -24,7 +24,15 @@ class UpdateWeddingSettings
             'background_color' => $theme['backgroundColor'] ?? null,
             'heading_font' => $theme['headingFont'] ?? null,
             'body_font' => $theme['bodyFont'] ?? null,
-        ]);
+        ];
+
+        // Older full-PUT clients do not know about templateKey. In that case,
+        // preserve the presentation family already assigned to the wedding.
+        if (array_key_exists('templateKey', $settings)) {
+            $attributes['template_key'] = $settings['templateKey'];
+        }
+
+        $wedding->update($attributes);
 
         return $wedding->refresh();
     }

@@ -23,4 +23,9 @@ class WeddingHeroContent extends Model
     {
         return $this->belongsTo(Wedding::class);
     }
+
+    public function media(): BelongsTo
+    {
+        return $this->belongsTo(WeddingMedia::class, 'hero_media_id');
+    }
 }

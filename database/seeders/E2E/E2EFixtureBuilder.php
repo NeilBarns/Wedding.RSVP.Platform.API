@@ -4,6 +4,7 @@ namespace Database\Seeders\E2E;
 
 use App\Actions\CreateInvitation;
 use App\Actions\SubmitPublicRsvp;
+use App\Enums\WeddingTemplateKey;
 use App\Models\Guest;
 use App\Models\Invitation;
 use App\Models\User;
@@ -38,6 +39,7 @@ class E2EFixtureBuilder
             'rsvp_deadline' => '2099-05-31',
             'dress_code' => 'E2E Formal',
             'status' => Wedding::STATUS_PUBLISHED,
+            'template_key' => WeddingTemplateKey::EditorialLinenV1->value,
             'theme_key' => 'e2e-linen',
             'primary_color' => '#4A5D4E',
             'secondary_color' => '#D8CBB8',

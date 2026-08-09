@@ -9,6 +9,6 @@ class WeddingHeroContentResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        return ['id' => $this->id, 'eyebrow' => $this->eyebrow, 'headline' => $this->headline, 'subheadline' => $this->subheadline, 'mediaUrl' => $this->hero_media_url, 'mediaAltText' => $this->hero_media_alt_text, 'isPublished' => $this->is_published];
+        return ['id' => $this->id, 'eyebrow' => $this->eyebrow, 'headline' => $this->headline, 'subheadline' => $this->subheadline, 'heroMediaId' => $this->hero_media_id, 'mediaUrl' => $this->media?->url() ?? $this->hero_media_url, 'mediaAltText' => $this->hero_media_alt_text ?? $this->media?->alt_text, 'isPublished' => $this->is_published];
     }
 }

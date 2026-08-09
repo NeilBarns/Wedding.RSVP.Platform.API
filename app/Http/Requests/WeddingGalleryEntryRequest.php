@@ -3,8 +3,10 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\NormalizesContentInput;
+use App\Models\Wedding;
 use App\Rules\PlainText;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class WeddingGalleryEntryRequest extends FormRequest
 {
@@ -19,7 +21,9 @@ class WeddingGalleryEntryRequest extends FormRequest
     {
         $plain = new PlainText;
 
-        return ['imageUrl' => ['required', 'url', 'max:2048'], 'altText' => ['nullable', 'string', 'max:500', $plain], 'caption' => ['nullable', 'string', 'max:2000', $plain], 'sortOrder' => ['required', 'integer', 'min:0'], 'isPublished' => ['required', 'boolean']];
+        $weddingId = Wedding::currentSingleWedding()?->id ?? -1;
+
+        return ['imageUrl' => ['nullable', 'required_without:mediaId', 'url', 'max:2048'], 'mediaId' => ['nullable', 'required_without:imageUrl', 'integer', Rule::exists('wedding_media', 'id')->where('wedding_id', $weddingId)], 'altText' => ['nullable', 'string', 'max:500', $plain], 'caption' => ['nullable', 'string', 'max:2000', $plain], 'sortOrder' => ['required', 'integer', 'min:0'], 'isPublished' => ['required', 'boolean']];
     }
 
     protected function prepareForValidation(): void

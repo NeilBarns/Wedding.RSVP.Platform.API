@@ -15,6 +15,14 @@ The JSON form returns the disposable admin credentials plus fresh, submitted, an
 
 This database is intentionally disposable. Never configure these commands with development, PHPUnit, staging, or production databases, and never commit `.env.e2e` or emitted fixture values.
 
+## Wedding media storage
+
+Admin wedding images use Laravel's configured `WEDDING_MEDIA_DISK` (`public` by default) and are stored under `weddings/{weddingId}/media` with generated UUID filenames. Run `php artisan storage:link` once for local public URLs.
+
+Uploads accept JPEG, PNG, and WebP images up to 10 MB with minimum dimensions of 600 × 400 pixels. Original filenames are retained only as metadata. Hero, Story, and Gallery content prefer linked uploaded media while retaining their existing URL fields as a backward-compatible fallback. Referenced media cannot be deleted.
+
+The filesystem abstraction permits a later move to an object-storage disk without changing the content API. No image transformation or EXIF-orientation correction is performed yet, so stored dimensions reflect the encoded image and source metadata is not stripped.
+
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>

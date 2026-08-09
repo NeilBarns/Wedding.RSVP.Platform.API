@@ -16,6 +16,7 @@ class WeddingSummaryResource extends JsonResource
             'rsvpDeadline' => $this->rsvp_deadline?->format('Y-m-d'),
             'dressCode' => $this->dress_code,
             'status' => $this->status,
+            'templateKey' => $this->template_key,
             'theme' => [
                 'key' => $this->theme_key,
                 'primaryColor' => $this->primary_color,
