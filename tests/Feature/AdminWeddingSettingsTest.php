@@ -97,9 +97,18 @@ class AdminWeddingSettingsTest extends TestCase
             'body_font' => 'Inter',
         ]);
 
+        $expectedPublicData = $response->json('data');
+        $expectedPublicData['content'] = [
+            'hero' => null,
+            'story' => [],
+            'events' => [],
+            'faq' => [],
+            'gallery' => [],
+        ];
+
         $this->getJson('/api/wedding')
             ->assertOk()
-            ->assertJsonPath('data', $response->json('data'));
+            ->assertJsonPath('data', $expectedPublicData);
     }
 
     public function test_administrator_can_update_settings_and_unauthenticated_user_cannot(): void

@@ -6,6 +6,7 @@ use Database\Factories\WeddingFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Wedding extends Model
 {
@@ -51,6 +52,31 @@ class Wedding extends Model
     public function invitations(): HasMany
     {
         return $this->hasMany(Invitation::class);
+    }
+
+    public function heroContent(): HasOne
+    {
+        return $this->hasOne(WeddingHeroContent::class);
+    }
+
+    public function storyEntries(): HasMany
+    {
+        return $this->hasMany(WeddingStoryEntry::class);
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(WeddingEvent::class);
+    }
+
+    public function faqEntries(): HasMany
+    {
+        return $this->hasMany(WeddingFaqEntry::class);
+    }
+
+    public function galleryEntries(): HasMany
+    {
+        return $this->hasMany(WeddingGalleryEntry::class);
     }
 
     public static function currentSingleWedding(): ?self
