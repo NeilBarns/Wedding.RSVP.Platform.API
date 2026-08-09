@@ -15,6 +15,14 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    'wedding_media_disk' => env('WEDDING_MEDIA_DISK', 'public'),
+
+    'wedding_media_max_kilobytes' => 10 * 1024,
+
+    'wedding_media_min_width' => 600,
+
+    'wedding_media_min_height' => 400,
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks

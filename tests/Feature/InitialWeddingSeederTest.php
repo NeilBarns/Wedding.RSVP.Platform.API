@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\WeddingTemplateKey;
 use App\Models\Wedding;
 use Database\Seeders\InitialWeddingSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,6 +25,7 @@ class InitialWeddingSeederTest extends TestCase
             'rsvp_deadline' => null,
             'dress_code' => 'Filipiniana',
             'status' => Wedding::STATUS_DRAFT,
+            'template_key' => WeddingTemplateKey::EditorialLinenV1->value,
             'theme_key' => null,
             'primary_color' => null,
             'secondary_color' => null,

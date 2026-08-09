@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\WeddingTemplateKey;
 use App\Models\Wedding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -21,6 +22,7 @@ class WeddingModelTest extends TestCase
         $wedding->refresh();
 
         $this->assertSame(Wedding::STATUS_DRAFT, $wedding->status);
+        $this->assertSame(WeddingTemplateKey::EditorialLinenV1->value, $wedding->template_key);
         $this->assertSame('2027-04-10', $wedding->wedding_date->format('Y-m-d'));
         $this->assertNull($wedding->rsvp_deadline);
         $this->assertNull($wedding->theme_key);

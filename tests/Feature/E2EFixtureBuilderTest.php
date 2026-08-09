@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\WeddingTemplateKey;
 use App\Models\Guest;
 use App\Models\Invitation;
 use App\Models\RsvpRevision;
@@ -37,6 +38,7 @@ class E2EFixtureBuilderTest extends TestCase
 
         $wedding = Wedding::query()->sole();
         $this->assertSame(Wedding::STATUS_PUBLISHED, $wedding->status);
+        $this->assertSame(WeddingTemplateKey::EditorialLinenV1->value, $wedding->template_key);
         $this->assertTrue($wedding->heroContent()->where('is_published', true)->exists());
         $this->assertSame(2, $wedding->storyEntries()->count());
         $this->assertSame(3, $wedding->events()->count());

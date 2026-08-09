@@ -15,8 +15,9 @@ class WeddingContentResource extends JsonResource
     public function toArray(Request $request): array
     {
         $hero = $this->heroContent;
-        $public = fn ($resource) => collect($resource->resolve($request))->map(fn (array $item) => collect($item)->except('isPublished')->all())->all();
+        $mediaIds = ['heroMediaId', 'imageMediaId', 'mediaId'];
+        $public = fn ($resource) => collect($resource->resolve($request))->map(fn (array $item) => collect($item)->except(['isPublished', ...$mediaIds])->all())->all();
 
-        return ['hero' => $hero ? collect((new WeddingHeroContentResource($hero))->resolve($request))->except(['id', 'isPublished'])->all() : null, 'story' => $public(WeddingStoryEntryResource::collection($this->storyEntries)), 'events' => $public(WeddingEventResource::collection($this->events)), 'faq' => $public(WeddingFaqEntryResource::collection($this->faqEntries)), 'gallery' => $public(WeddingGalleryEntryResource::collection($this->galleryEntries))];
+        return ['hero' => $hero ? collect((new WeddingHeroContentResource($hero))->resolve($request))->except(['id', 'isPublished', ...$mediaIds])->all() : null, 'story' => $public(WeddingStoryEntryResource::collection($this->storyEntries)), 'events' => $public(WeddingEventResource::collection($this->events)), 'faq' => $public(WeddingFaqEntryResource::collection($this->faqEntries)), 'gallery' => $public(WeddingGalleryEntryResource::collection($this->galleryEntries))];
     }
 }

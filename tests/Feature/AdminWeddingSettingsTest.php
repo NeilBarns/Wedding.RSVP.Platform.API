@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\WeddingTemplateKey;
 use App\Models\User;
 use App\Models\Wedding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -30,6 +31,7 @@ class AdminWeddingSettingsTest extends TestCase
                         'rsvpDeadline',
                         'dressCode',
                         'status',
+                        'templateKey',
                         'theme' => [
                             'key',
                             'primaryColor',
@@ -61,6 +63,7 @@ class AdminWeddingSettingsTest extends TestCase
             'partnerOneName' => '  Neil Michael Barnedo  ',
             'partnerTwoName' => '  Hazel Elago ',
             'rsvpDeadline' => '2026-11-22',
+            'templateKey' => WeddingTemplateKey::EditorialLinenV1->value,
             'theme' => [
                 'key' => ' editorial-linen ',
                 'primaryColor' => '#4a4038',
@@ -88,6 +91,7 @@ class AdminWeddingSettingsTest extends TestCase
             'rsvp_deadline' => '2026-11-22',
             'dress_code' => 'Filipiniana',
             'status' => Wedding::STATUS_DRAFT,
+            'template_key' => WeddingTemplateKey::EditorialLinenV1->value,
             'theme_key' => 'editorial-linen',
             'primary_color' => '#4A4038',
             'secondary_color' => '#D8C9B8',
@@ -197,6 +201,50 @@ class AdminWeddingSettingsTest extends TestCase
             ->assertJsonPath('data.theme.backgroundColor', null)
             ->assertJsonPath('data.theme.headingFont', null)
             ->assertJsonPath('data.theme.bodyFont', null);
+    }
+
+    public function test_only_supported_template_keys_are_accepted(): void
+    {
+        Wedding::factory()->create();
+        $this->actingAs(User::factory()->create());
+
+        $this->putJson('/api/admin/wedding', $this->validPayload([
+            'templateKey' => WeddingTemplateKey::EditorialLinenV1->value,
+        ]))->assertOk()
+            ->assertJsonPath('data.templateKey', WeddingTemplateKey::EditorialLinenV1->value);
+
+        foreach (['unknown', 'classic', '<script>'] as $templateKey) {
+            $this->putJson('/api/admin/wedding', $this->validPayload([
+                'templateKey' => $templateKey,
+            ]))->assertUnprocessable()->assertJsonValidationErrors('templateKey');
+        }
+    }
+
+    public function test_older_put_payload_and_theme_changes_preserve_template_identity(): void
+    {
+        $wedding = Wedding::factory()->create([
+            'template_key' => WeddingTemplateKey::EditorialLinenV1->value,
+            'theme_key' => 'original-theme',
+            'primary_color' => '#111111',
+        ]);
+        $this->actingAs(User::factory()->create());
+
+        $this->putJson('/api/admin/wedding', $this->validPayload([
+            'dressCode' => 'Cocktail',
+            'theme' => [
+                'key' => 'updated-theme',
+                'primaryColor' => '#abcdef',
+            ],
+        ]))->assertOk()
+            ->assertJsonPath('data.templateKey', WeddingTemplateKey::EditorialLinenV1->value)
+            ->assertJsonPath('data.theme.key', 'updated-theme')
+            ->assertJsonPath('data.theme.primaryColor', '#ABCDEF');
+
+        $wedding->refresh();
+
+        $this->assertSame(WeddingTemplateKey::EditorialLinenV1->value, $wedding->template_key);
+        $this->assertSame('updated-theme', $wedding->theme_key);
+        $this->assertSame('#ABCDEF', $wedding->primary_color);
     }
 
     private function validPayload(array $overrides = []): array

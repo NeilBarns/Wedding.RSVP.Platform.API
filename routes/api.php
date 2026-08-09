@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\WeddingEventContentController;
 use App\Http\Controllers\Admin\WeddingFaqContentController;
 use App\Http\Controllers\Admin\WeddingGalleryContentController;
 use App\Http\Controllers\Admin\WeddingHeroContentController;
+use App\Http\Controllers\Admin\WeddingMediaController;
 use App\Http\Controllers\Admin\WeddingSettingsController;
 use App\Http\Controllers\Admin\WeddingStoryContentController;
 use App\Http\Controllers\AuthenticationController;
@@ -39,6 +40,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/dashboard/summary', DashboardSummaryController::class);
     Route::get('/admin/wedding', [WeddingSettingsController::class, 'show']);
     Route::put('/admin/wedding', [WeddingSettingsController::class, 'update']);
+
+    Route::get('/admin/wedding-media', [WeddingMediaController::class, 'index']);
+    Route::post('/admin/wedding-media', [WeddingMediaController::class, 'store']);
+    Route::get('/admin/wedding-media/{media}', [WeddingMediaController::class, 'show']);
+    Route::put('/admin/wedding-media/{media}', [WeddingMediaController::class, 'update']);
+    Route::delete('/admin/wedding-media/{media}', [WeddingMediaController::class, 'destroy']);
 
     Route::get('/admin/wedding-content/hero', [WeddingHeroContentController::class, 'show']);
     Route::put('/admin/wedding-content/hero', [WeddingHeroContentController::class, 'update']);

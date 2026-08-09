@@ -9,6 +9,6 @@ class WeddingGalleryEntryResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        return ['id' => $this->id, 'imageUrl' => $this->image_url, 'altText' => $this->alt_text, 'caption' => $this->caption, 'sortOrder' => $this->sort_order, 'isPublished' => $this->is_published];
+        return ['id' => $this->id, 'mediaId' => $this->media_id, 'imageUrl' => $this->media?->url() ?? $this->image_url, 'altText' => $this->alt_text ?? $this->media?->alt_text, 'caption' => $this->caption, 'sortOrder' => $this->sort_order, 'isPublished' => $this->is_published];
     }
 }

@@ -32,6 +32,7 @@ class Wedding extends Model
         'rsvp_deadline',
         'dress_code',
         'status',
+        'template_key',
         'theme_key',
         'primary_color',
         'secondary_color',
@@ -77,6 +78,11 @@ class Wedding extends Model
     public function galleryEntries(): HasMany
     {
         return $this->hasMany(WeddingGalleryEntry::class);
+    }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(WeddingMedia::class);
     }
 
     public static function currentSingleWedding(): ?self

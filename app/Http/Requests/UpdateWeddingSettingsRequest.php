@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\WeddingTemplateKey;
 use App\Models\Wedding;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -41,6 +42,7 @@ class UpdateWeddingSettingsRequest extends FormRequest
             'rsvpDeadline' => ['nullable', 'date_format:Y-m-d', 'before:weddingDate'],
             'dressCode' => ['nullable', 'string', 'max:100'],
             'status' => ['required', 'string', Rule::in(Wedding::STATUSES)],
+            'templateKey' => ['sometimes', 'required', Rule::enum(WeddingTemplateKey::class)],
             'theme' => ['sometimes', 'array'],
             'theme.key' => ['nullable', 'string', 'max:100'],
             'theme.primaryColor' => $colorRules,
