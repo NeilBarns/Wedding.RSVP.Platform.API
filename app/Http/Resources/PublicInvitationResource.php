@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\RsvpConfigurationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -26,6 +27,7 @@ class PublicInvitationResource extends JsonResource
                 'guests' => PublicInvitationGuestResource::collection($this->whenLoaded('guests')),
             ],
             'wedding' => (new WeddingSummaryResource($this->wedding))->resolve($request),
+            'rsvpConfiguration' => app(RsvpConfigurationService::class)->grouped($this->wedding),
         ];
     }
 }

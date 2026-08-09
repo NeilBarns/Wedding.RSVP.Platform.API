@@ -39,6 +39,7 @@ class ResolvePublicInvitation
         $invitation->load([
             'guests' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
         ]);
+        $wedding->loadMissing('rsvpQuestions');
 
         return $invitation;
     }
@@ -52,6 +53,7 @@ class ResolvePublicInvitation
         }
 
         $invitation = $this->find($wedding, $rawToken, true);
+        $wedding->loadMissing('rsvpQuestions');
         $invitation?->setRelation('wedding', $wedding);
 
         return $invitation;

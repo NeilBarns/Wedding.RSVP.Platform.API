@@ -30,11 +30,12 @@ class SubmitPublicRsvpRequest extends FormRequest
                     Guest::ATTENDANCE_DECLINED,
                 ]),
             ],
-            'guests.*.dietaryRequirements' => ['nullable', 'string', 'max:2000'],
-            'guests.*.accessibilityRequirements' => ['nullable', 'string', 'max:2000'],
-            'contactNumber' => ['nullable', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:254'],
-            'message' => ['nullable', 'string', 'max:5000'],
+            // Configuration-aware format and required rules are applied after the invitation is resolved.
+            'guests.*.dietaryRequirements' => ['nullable'],
+            'guests.*.accessibilityRequirements' => ['nullable'],
+            'contactNumber' => ['nullable'],
+            'email' => ['nullable'],
+            'message' => ['nullable'],
         ];
     }
 

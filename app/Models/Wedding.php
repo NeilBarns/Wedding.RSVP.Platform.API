@@ -55,6 +55,11 @@ class Wedding extends Model
         return $this->hasMany(Invitation::class);
     }
 
+    public function rsvpQuestions(): HasMany
+    {
+        return $this->hasMany(WeddingRsvpQuestion::class);
+    }
+
     public function heroContent(): HasOne
     {
         return $this->hasOne(WeddingHeroContent::class);
