@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardSummaryController;
 use App\Http\Controllers\Admin\GuestController;
 use App\Http\Controllers\Admin\InvitationController;
 use App\Http\Controllers\Admin\WeddingSettingsController;
@@ -30,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthenticationController::class, 'me']);
 
     Route::get('/admin/ping', fn () => response()->json(['status' => 'ok']));
+    Route::get('/admin/dashboard/summary', DashboardSummaryController::class);
     Route::get('/admin/wedding', [WeddingSettingsController::class, 'show']);
     Route::put('/admin/wedding', [WeddingSettingsController::class, 'update']);
 
