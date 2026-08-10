@@ -11,29 +11,54 @@ use Illuminate\Support\Facades\DB;
 class RsvpConfigurationService
 {
     private const DEFINITIONS = [
-        'dietaryRequirements' => ['scope' => 'guest', 'label' => 'Dietary requirements', 'helperText' => null, 'sortOrder' => 10],
-        'accessibilityNeeds' => ['scope' => 'guest', 'label' => 'Accessibility needs', 'helperText' => null, 'sortOrder' => 20],
-        'responsePhone' => ['scope' => 'household', 'label' => 'Contact number', 'helperText' => null, 'sortOrder' => 10],
-        'responseEmail' => ['scope' => 'household', 'label' => 'Email address', 'helperText' => null, 'sortOrder' => 20],
-        'messageToCouple' => ['scope' => 'household', 'label' => 'Message to the couple', 'helperText' => null, 'sortOrder' => 30],
+        'dietaryRequirements' => ['scope' => 'guest', 'enabled' => true, 'label' => 'Dietary requirements', 'helperText' => null, 'sortOrder' => 10, 'type' => 'text'],
+        'accessibilityNeeds' => ['scope' => 'guest', 'enabled' => true, 'label' => 'Accessibility needs', 'helperText' => null, 'sortOrder' => 20, 'type' => 'text'],
+        'mealChoice' => ['scope' => 'guest', 'enabled' => false, 'label' => 'Meal choice', 'helperText' => null, 'sortOrder' => 30, 'type' => 'singleChoice'],
+        'responsePhone' => ['scope' => 'household', 'enabled' => true, 'label' => 'Contact number', 'helperText' => null, 'sortOrder' => 10, 'type' => 'text'],
+        'responseEmail' => ['scope' => 'household', 'enabled' => true, 'label' => 'Email address', 'helperText' => null, 'sortOrder' => 20, 'type' => 'text'],
+        'messageToCouple' => ['scope' => 'household', 'enabled' => true, 'label' => 'Message to the couple', 'helperText' => null, 'sortOrder' => 30, 'type' => 'textarea'],
     ];
 
-    public function questions(Wedding $wedding, bool $includeAttendance = true): Collection
+    public function questions(Wedding $wedding, bool $includeAttendance = true, bool $publicSafe = false): Collection
     {
+        $wedding->loadMissing(['rsvpQuestions', 'rsvpQuestionOptions']);
         $persisted = $wedding->rsvpQuestions->keyBy(fn ($question) => $question->key->value);
-        $questions = collect(self::DEFINITIONS)->map(function (array $definition, string $key) use ($persisted) {
-            $question = $persisted->get($key);
+        $options = $wedding->rsvpQuestionOptions
+            ->where('question_key', RsvpQuestionKey::MealChoice)
+            ->sortBy([['sort_order', 'asc'], ['id', 'asc']]);
 
-            return [
+        $questions = collect(self::DEFINITIONS)->map(function (array $definition, string $key) use ($persisted, $options, $publicSafe) {
+            $question = $persisted->get($key);
+            $resolved = [
                 'key' => $key,
                 'scope' => $definition['scope'],
-                'enabled' => $question?->enabled ?? true,
+                'enabled' => $question?->enabled ?? $definition['enabled'],
                 'required' => $question?->required ?? false,
                 'label' => $question?->label ?? $definition['label'],
                 'helperText' => $question?->helper_text ?? $definition['helperText'],
                 'sortOrder' => $question?->sort_order ?? $definition['sortOrder'],
                 'system' => false,
+                'type' => $definition['type'],
             ];
+
+            if ($key === RsvpQuestionKey::MealChoice->value) {
+                $resolved['options'] = $options
+                    ->when($publicSafe, fn (Collection $items) => $items->where('enabled', true))
+                    ->values()
+                    ->map(fn ($option) => $publicSafe ? [
+                        'label' => $option->label,
+                        'value' => $option->value,
+                        'sortOrder' => $option->sort_order,
+                    ] : [
+                        'id' => $option->id,
+                        'label' => $option->label,
+                        'value' => $option->value,
+                        'sortOrder' => $option->sort_order,
+                        'enabled' => $option->enabled,
+                    ])->all();
+            }
+
+            return $resolved;
         })->values();
 
         if ($includeAttendance) {
@@ -46,6 +71,7 @@ class RsvpConfigurationService
                 'helperText' => null,
                 'sortOrder' => 0,
                 'system' => true,
+                'type' => 'singleChoice',
             ]);
         }
 
@@ -58,7 +84,7 @@ class RsvpConfigurationService
 
     public function grouped(Wedding $wedding): array
     {
-        $questions = $this->questions($wedding);
+        $questions = $this->questions($wedding, true, true);
 
         return [
             'guestQuestions' => $questions->where('scope', RsvpQuestionScope::Guest->value)->values()->all(),
@@ -88,9 +114,33 @@ class RsvpConfigurationService
                     ],
                 );
             }
+
+            $meal = collect($questions)->firstWhere('key', RsvpQuestionKey::MealChoice->value);
+            if ($meal !== null) {
+                $submittedValues = collect($meal['options'])->pluck('value');
+                $wedding->rsvpQuestionOptions()
+                    ->where('question_key', RsvpQuestionKey::MealChoice->value)
+                    ->whereNotIn('value', $submittedValues)
+                    ->update(['enabled' => false]);
+
+                foreach ($meal['options'] as $option) {
+                    $wedding->rsvpQuestionOptions()->updateOrCreate(
+                        [
+                            'question_key' => RsvpQuestionKey::MealChoice->value,
+                            'value' => $option['value'],
+                        ],
+                        [
+                            'label' => $option['label'],
+                            'sort_order' => $option['sortOrder'],
+                            'enabled' => $option['enabled'],
+                        ],
+                    );
+                }
+            }
         });
 
         $wedding->unsetRelation('rsvpQuestions');
+        $wedding->unsetRelation('rsvpQuestionOptions');
     }
 
     public static function supportedKeys(): array

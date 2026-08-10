@@ -52,6 +52,7 @@ class Guest extends Model
         'attendance_status',
         'dietary_requirements',
         'accessibility_requirements',
+        'meal_choice',
         'sort_order',
     ];
 

@@ -57,6 +57,9 @@ class SubmitPublicRsvp
                     'accessibility_requirements' => $attending && $questions['accessibilityNeeds']['enabled']
                         ? ($response['accessibilityRequirements'] ?? null)
                         : null,
+                    'meal_choice' => $attending && $questions['mealChoice']['enabled']
+                        ? ($response['mealChoice'] ?? null)
+                        : null,
                 ]);
             }
 
@@ -118,6 +121,14 @@ class SubmitPublicRsvp
                     $errors["guests.{$index}.{$field}"][] = "The {$question['label']} field is required for attending guests.";
                 }
             }
+
+            $meal = $questions['mealChoice'];
+            $mealChoice = $response['mealChoice'] ?? null;
+            if ($meal['enabled'] && $meal['required'] && empty($mealChoice)) {
+                $errors["guests.{$index}.mealChoice"][] = "The {$meal['label']} field is required for attending guests.";
+            } elseif ($meal['enabled'] && $mealChoice !== null && ! collect($meal['options'])->where('enabled', true)->pluck('value')->containsStrict($mealChoice)) {
+                $errors["guests.{$index}.mealChoice"][] = 'The selected Meal Choice option is unavailable.';
+            }
         }
 
         foreach ([
@@ -147,6 +158,10 @@ class SubmitPublicRsvp
 
         if ($questions['accessibilityNeeds']['enabled']) {
             $rules['guests.*.accessibilityRequirements'] = ['nullable', 'string', 'max:2000'];
+        }
+
+        if ($questions['mealChoice']['enabled']) {
+            $rules['guests.*.mealChoice'] = ['nullable', 'string', 'max:80'];
         }
 
         if ($questions['responsePhone']['enabled']) {
@@ -181,6 +196,7 @@ class SubmitPublicRsvp
                 'attendanceStatus' => $guest->attendance_status,
                 'dietaryRequirements' => $guest->dietary_requirements,
                 'accessibilityRequirements' => $guest->accessibility_requirements,
+                'mealChoice' => $guest->meal_choice,
                 'sortOrder' => $guest->sort_order,
             ])->all(),
         ];

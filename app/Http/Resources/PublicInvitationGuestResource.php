@@ -16,6 +16,7 @@ class PublicInvitationGuestResource extends JsonResource
             'attendanceStatus' => $this->attendance_status,
             'dietaryRequirements' => $this->dietary_requirements,
             'accessibilityRequirements' => $this->accessibility_requirements,
+            'mealChoice' => $this->meal_choice,
             'sortOrder' => $this->sort_order,
         ];
     }

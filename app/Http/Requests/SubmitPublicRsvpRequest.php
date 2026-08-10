@@ -20,7 +20,7 @@ class SubmitPublicRsvpRequest extends FormRequest
             'guests' => ['required', 'array', 'min:1'],
             'guests.*' => [
                 'required',
-                'array:id,attendanceStatus,dietaryRequirements,accessibilityRequirements',
+                'array:id,attendanceStatus,dietaryRequirements,accessibilityRequirements,mealChoice',
             ],
             'guests.*.id' => ['required', 'integer', 'distinct:strict'],
             'guests.*.attendanceStatus' => [
@@ -33,6 +33,7 @@ class SubmitPublicRsvpRequest extends FormRequest
             // Configuration-aware format and required rules are applied after the invitation is resolved.
             'guests.*.dietaryRequirements' => ['nullable'],
             'guests.*.accessibilityRequirements' => ['nullable'],
+            'guests.*.mealChoice' => ['nullable'],
             'contactNumber' => ['nullable'],
             'email' => ['nullable'],
             'message' => ['nullable'],
@@ -63,6 +64,10 @@ class SubmitPublicRsvpRequest extends FormRequest
                     if (array_key_exists($field, $guest) && is_string($guest[$field])) {
                         $data['guests'][$index][$field] = $this->normalize($guest[$field]);
                     }
+                }
+
+                if (array_key_exists('mealChoice', $guest) && is_string($guest['mealChoice'])) {
+                    $data['guests'][$index]['mealChoice'] = $this->normalize($guest['mealChoice']);
                 }
             }
         }

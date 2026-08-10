@@ -25,16 +25,21 @@ class AdminRsvpConfigurationTest extends TestCase
             'accessibilityNeeds',
             'attendance',
             'dietaryRequirements',
+            'mealChoice',
             'messageToCouple',
             'responseEmail',
             'responsePhone',
         ], collect($questions)->pluck('key')->sort()->values()->all());
-        $this->assertSame(['attendance', 'dietaryRequirements', 'accessibilityNeeds'], collect($questions)->where('scope', 'guest')->pluck('key')->values()->all());
+        $this->assertSame(['attendance', 'dietaryRequirements', 'accessibilityNeeds', 'mealChoice'], collect($questions)->where('scope', 'guest')->pluck('key')->values()->all());
         $this->assertSame(['responsePhone', 'responseEmail', 'messageToCouple'], collect($questions)->where('scope', 'household')->pluck('key')->values()->all());
         $attendance = collect($questions)->firstWhere('key', 'attendance');
         $this->assertTrue($attendance['enabled']);
         $this->assertTrue($attendance['required']);
         $this->assertTrue($attendance['system']);
+        $meal = collect($questions)->firstWhere('key', 'mealChoice');
+        $this->assertFalse($meal['enabled']);
+        $this->assertSame('singleChoice', $meal['type']);
+        $this->assertSame([], $meal['options']);
         $this->assertDatabaseCount('wedding_rsvp_questions', 0);
     }
 
@@ -73,7 +78,7 @@ class AdminRsvpConfigurationTest extends TestCase
             ->assertJsonPath('data.questions.1.label', 'Any dietary requirements?')
             ->assertJsonPath('data.questions.1.helperText', 'Include allergies.');
 
-        $this->assertDatabaseCount('wedding_rsvp_questions', 5);
+        $this->assertDatabaseCount('wedding_rsvp_questions', 6);
         $this->assertDatabaseHas('wedding_rsvp_questions', [
             'wedding_id' => $wedding->id,
             'key' => RsvpQuestionKey::DietaryRequirements->value,
@@ -118,10 +123,10 @@ class AdminRsvpConfigurationTest extends TestCase
 
         $this->assertSame('modern-minimal-v1', $wedding->fresh()->template_key);
         $this->assertSame('custom', $wedding->fresh()->theme_key);
-        $this->assertSame(5, $wedding->rsvpQuestions()->count());
+        $this->assertSame(6, $wedding->rsvpQuestions()->count());
 
         $wedding->update(['template_key' => 'editorial-linen-v1', 'theme_key' => 'changed']);
-        $this->assertSame(5, $wedding->rsvpQuestions()->count());
+        $this->assertSame(6, $wedding->rsvpQuestions()->count());
     }
 
     private function payload(): array
@@ -129,6 +134,7 @@ class AdminRsvpConfigurationTest extends TestCase
         return ['questions' => [
             ['key' => 'dietaryRequirements', 'enabled' => true, 'required' => false, 'label' => 'Dietary requirements', 'helperText' => null, 'sortOrder' => 10],
             ['key' => 'accessibilityNeeds', 'enabled' => true, 'required' => false, 'label' => 'Accessibility needs', 'helperText' => null, 'sortOrder' => 20],
+            ['key' => 'mealChoice', 'enabled' => false, 'required' => false, 'label' => 'Meal choice', 'helperText' => null, 'sortOrder' => 30, 'options' => []],
             ['key' => 'responsePhone', 'enabled' => true, 'required' => false, 'label' => 'Contact number', 'helperText' => null, 'sortOrder' => 10],
             ['key' => 'responseEmail', 'enabled' => true, 'required' => false, 'label' => 'Email address', 'helperText' => null, 'sortOrder' => 20],
             ['key' => 'messageToCouple', 'enabled' => true, 'required' => false, 'label' => 'Message to the couple', 'helperText' => null, 'sortOrder' => 30],
