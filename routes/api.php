@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardSummaryController;
 use App\Http\Controllers\Admin\GuestController;
 use App\Http\Controllers\Admin\InvitationController;
+use App\Http\Controllers\Admin\MealChoiceReportController;
 use App\Http\Controllers\Admin\RsvpConfigurationController;
 use App\Http\Controllers\Admin\WeddingEventContentController;
 use App\Http\Controllers\Admin\WeddingFaqContentController;
@@ -39,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/admin/ping', fn () => response()->json(['status' => 'ok']));
     Route::get('/admin/dashboard/summary', DashboardSummaryController::class);
+    Route::get('/admin/reports/meal-choices', MealChoiceReportController::class);
     Route::get('/admin/wedding', [WeddingSettingsController::class, 'show']);
     Route::put('/admin/wedding', [WeddingSettingsController::class, 'update']);
     Route::get('/admin/rsvp-configuration', [RsvpConfigurationController::class, 'show']);
